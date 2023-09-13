@@ -78,26 +78,44 @@ class CoParser:
 
         summary = Summary(children=[])
         # 1行ずつパースして、トークン種別と内容を取得
+        # for line in lines:
+        #     token_kind, line = self.parse_line(line)
+        #     node = Node(kind=token_kind, value=line.content, children=[])
+
+        #     if stack.is_empty():
+        #         stack.push(node)
+        #         continue
+
+        #     pre_node = stack.peek()
+        #     if pre_node.kind <= token_kind:
+        #         # より深い階層になった場合はスタックに積む
+        #         stack.push(node)
+        #     else:
+        #         # より浅い階層になった場合はスタックから取り出す
+        #         while not stack.is_empty():# and stack.peek().kind > token_kind:
+        #             pre_node = stack.pop()
+        #             print(pre_node)
+        #             pre_node.children.append(node)
+        #             node = pre_node
+        #             if pre_node.kind == TokenKind.PACKAGE:
+        #                 summary.children.append(pre_node)
+
+        # return summary
+
+        pkg = None
+        mdl = None
+        cls = None
+        func = None
+        docstring = ""
         for line in lines:
             token_kind, line = self.parse_line(line)
-            node = Node(kind=token_kind, value=line.content, children=[])
-
-            if stack.is_empty():
-                stack.push(node)
-                continue
-
-            pre_node = stack.peek()
-            if pre_node.kind <= token_kind:
-                # より深い階層になった場合はスタックに積む
-                stack.push(node)
+            if token_kind == TokenKind.PACKAGE:
+                pkg = line.content
+            elif token_kind == TokenKind.MODULE:
+                mdl = line.content
+            elif token_kind == TokenKind.CLASS:
+                cls = line.content
+            elif token_kind == TokenKind.FUNCTION:
+                func = line.content
             else:
-                # より浅い階層になった場合はスタックから取り出す
-                while not stack.is_empty():# and stack.peek().kind > token_kind:
-                    pre_node = stack.pop()
-                    print(pre_node)
-                    pre_node.children.append(node)
-                    node = pre_node
-                    if pre_node.kind == TokenKind.PACKAGE:
-                        summary.children.append(pre_node)
-
-        return summary
+                docstring += line.content + "\n"
