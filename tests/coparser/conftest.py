@@ -31,24 +31,38 @@ class TestReportEx(TestReport):
         return msg
 
     @classmethod
+    def get_docstring(cls, item):
+        func_name = item.originalname
+        try:
+            if item.cls:
+                func = getattr(item.cls, func_name)
+            else:
+                func = getattr(item.module, func_name)
+        except AttributeError as e:
+            raise e
+
+        return func.__doc__
+
+    @classmethod
     def fromPytestItem(cls, item: pytest.Item):
         test_kind = ""
         if MARKER_CASE_NORMAL in item.keywords:
-            # print(dir(item.module))#, item)
             test_kind = TEST_KIND_NORMAL
         elif MARKER_CASE_ABNORMAL in item.keywords:
             test_kind = TEST_KIND_ABNORMAL
         elif MARKER_CASE_LIMITATION in item.keywords:
             test_kind = TEST_KIND_LIMITATION
+        else:
+            test_kind = "未分類"
 
-        pkg = ""
+        pkg = item.module.__package__
         mdl = item.module.__name__
-        cls = item.cls if item.cls else ""
+        clz = item.cls.__name__ if item.cls else ""
         fnc = item.name
-        doc = ""
-        print(item)
-        print(dir(item))
-        return TestReportEx(pkg, mdl, cls, fnc, test_kind, doc)
+        # NOTE: 以下だとdocstringが取得できない
+        # doc = item.__doc__
+        doc = cls.get_docstring(item)
+        return TestReportEx(pkg, mdl, clz, fnc, test_kind, doc)
 
 
 def to_csv(reports: List[TestReportEx]):
@@ -67,6 +81,5 @@ def pytest_collection_modifyitems(
     for item in items:
         test_report = TestReportEx.fromPytestItem(item)
         reports.append(test_report)
-        break
     to_csv(reports)
     print("**** end")

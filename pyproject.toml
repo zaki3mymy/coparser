@@ -26,3 +26,10 @@ dev-dependencies = [
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.pytest.ini_options]
+markers = [
+    "case_normal: 正常",
+    "case_abnormal: 異常",
+    "case_limit: 境界"
+]
