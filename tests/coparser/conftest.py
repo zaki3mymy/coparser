@@ -1,3 +1,4 @@
+import csv
 from typing import List
 from collections import namedtuple
 
@@ -65,10 +66,20 @@ class TestReportEx(TestReport):
         return TestReportEx(pkg, mdl, clz, fnc, test_kind, doc)
 
 
-def to_csv(reports: List[TestReportEx]):
+def to_csv(reports: List[TestReportEx], filename="report.csv", encoding="sjis"):
+    """テストケースの収集結果をCSVに出力する。
+
+    Args:
+        reports (List[TestReportEx]): テスト結果のリスト
+        filename (str, optional): テスト結果のファイル名
+        encoding (str, optional): 出力するCSVの文字コード(Excelで開くことを想定しているでデフォルトは"sjis")
+    """
     reports = sorted(reports)
-    for rep in reports:
-        print(rep)
+    with open(filename, "w", encoding=encoding) as f:
+        writer = csv.writer(f, lineterminator="\n")
+        for rep in reports:
+            pkg, mdl, cls, fnc, test_kind, doc = rep
+            writer.writerow([pkg, mdl, cls, fnc, test_kind, doc])
 
 
 def pytest_collection_modifyitems(
@@ -76,10 +87,8 @@ def pytest_collection_modifyitems(
 ):
     """pytestがテストの収集を終えたタイミングで呼び出されるhook"""
 
-    print("**** start")
     reports = []
     for item in items:
         test_report = TestReportEx.fromPytestItem(item)
         reports.append(test_report)
     to_csv(reports)
-    print("**** end")
